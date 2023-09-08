@@ -75,6 +75,8 @@ bias_output = np.zeros((1, output_size))
 # Load your training and testing data using Pandas
 # Assume you have 'X_Train', 'Y_Train', 'X_test', and 'y_test' DataFrames
 
+print("X_Train", X_Train.shape)
+
 # Training loop
 for epoch in range(epochs):
     # Forward propagation
@@ -85,19 +87,23 @@ for epoch in range(epochs):
     
     # Compute the loss
     loss = mse_loss(Y_Train, final_output)
-    
+
+    # Reshape the loss value into a 721*1 matrix
+    Y_Train = Y_Train.reshape(-1,1)
     # Backpropagation
     d_loss = 2 * (final_output - Y_Train) / len(X_Train)
+    # The Diff wrto The Final Output
     d_final_input = d_loss
+    print("d_final_input", d_final_input.shape)
+    # Differntiation wrto The Weights of Layer 2 = (H_Layer * d_final_input) -> 25*721 * 721*1 = 25*1
     d_weights_hidden_output = np.dot(hidden_output.T, d_final_input)
-    print("D-Weights_Output", d_weights_hidden_output.shape)
+    # Differntiation wrto The Bias of Layer 2 = (d_final_input)
     d_bias_output = np.sum(d_final_input, axis=0, keepdims=True)
-    d_hidden_output = np.dot(weights_hidden_output.T, d_weights_hidden_output)
+    # Differntiation wrto The Hidden Layer = (d_final_input * weights_hidden_output) (Because of Hidden Output : No.of Samples*No.of Hidden Units)
+    d_hidden_output = np.dot(weights_hidden_output, d_final_input.T) # 25*721
     d_hidden_input = d_hidden_output.T * tanh_derivative(hidden_input)
-    d_weights_input_hidden = np.dot(X_Train.T, d_hidden_input)
+    d_weights_input_hidden = np.dot(X_Train.T, d_hidden_input) # 8*721 * 721*25 = 8*25
     d_bias_hidden = np.sum(d_hidden_input, axis=0, keepdims=True)
-    
-    print("Weights_Input_Hidden", weights_hidden_output.shape)
 
     # Update weights and biases using gradient descent
     weights_input_hidden -= learning_rate * d_weights_input_hidden
